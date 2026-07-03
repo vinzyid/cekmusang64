@@ -25,6 +25,10 @@ export default async function Home() {
     .order('created_at', { ascending: false })
     .limit(3);
 
+  const { count: totalReports } = await supabase.from('reports').select('*', { count: 'exact', head: true });
+  const { count: approvedReports } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'approved');
+  const { count: pendingReports } = await supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+
   const reports = latestReports || [];
   return (
     <div className="flex flex-col min-h-screen">
@@ -66,9 +70,9 @@ export default async function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {[
-              { label: 'Total Reports', value: '1,248', icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
-              { label: 'Verified Reports', value: '856', icon: ShieldCheck, color: 'text-green-500', bg: 'bg-green-50' },
-              { label: 'Pending Reviews', value: '42', icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50' },
+              { label: 'Total Laporan', value: totalReports || 0, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
+              { label: 'Laporan Diverifikasi', value: approvedReports || 0, icon: ShieldCheck, color: 'text-green-500', bg: 'bg-green-50' },
+              { label: 'Menunggu Review', value: pendingReports || 0, icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50' },
             ].map((stat, i) => (
               <Card key={i} className="border-none shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgb(0,0,0,0.06)] transition-shadow">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">

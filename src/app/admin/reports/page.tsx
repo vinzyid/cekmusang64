@@ -1,10 +1,6 @@
-'use client';
-
-import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Search, Filter, Eye, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import {
   Table,
@@ -14,16 +10,35 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
-export default function AdminReportsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+export default async function AdminReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const supabase = await createClient();
+  const { status: statusFilter } = await searchParams;
+  
+  // Verify admin access
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) {
+    redirect('/auth/login');
+  }
 
-  // Dummy data for presentation
-  const reports = [
-    { id: '1', reported: 'Ahmad S.', reporter: 'Budi (budi@gmail.com)', date: '12 Okt 2023', category: 'Barang Tidak Dikirim', status: 'pending' },
-    { id: '2', reported: 'Toko Maju', reporter: 'Citra (citra@gmail.com)', date: '11 Okt 2023', category: 'Barang Tidak Sesuai', status: 'approved' },
-    { id: '3', reported: '0812345678', reporter: 'Dedi (dedi@gmail.com)', date: '10 Okt 2023', category: 'Penipuan Transfer', status: 'rejected' },
-  ];
+  // Fetch reports based on filter if any
+  let query = supabase
+    .from('reports')
+    .select('id, reported_name, reporter_name, category, created_at, status')
+    .order('created_at', { ascending: false });
+
+  if (statusFilter && ['pending', 'approved', 'rejected', 'revision'].includes(statusFilter)) {
+    query = query.eq('status', statusFilter);
+  }
+
+  const { data: reports, error } = await query;
 
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -42,23 +57,8 @@ export default function AdminReportsPage() {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-heading font-bold mb-1">Manage Reports</h1>
-          <p className="text-sm text-muted-foreground">Review, approve, or reject user reports.</p>
-        </div>
-        
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search reports..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10"
-            />
-          </div>
-          <Button variant="outline" size="icon" className="shrink-0 h-10 w-10">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <h1 className="text-2xl font-heading font-bold mb-1">Kelola Laporan</h1>
+          <p className="text-sm text-muted-foreground">Review, setujui, atau tolak laporan pengguna.</p>
         </div>
       </div>
 
@@ -66,29 +66,39 @@ export default function AdminReportsPage() {
         <Table>
           <TableHeader className="bg-secondary/50">
             <TableRow>
-              <TableHead>Reported Entity</TableHead>
-              <TableHead>Reporter</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Terlapor</TableHead>
+              <TableHead>Pelapor</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Tanggal</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reports.map((report) => (
-              <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.reported}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{report.reporter}</TableCell>
-                <TableCell>{report.category}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{report.date}</TableCell>
-                <TableCell>{getStatusBadge(report.status)}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" className="h-8 px-2">
-                    <Eye className="h-4 w-4 mr-1" /> View
-                  </Button>
+            {(!reports || reports.length === 0) ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Tidak ada laporan ditemukan.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              reports.map((report) => (
+                <TableRow key={report.id}>
+                  <TableCell className="font-medium">{report.reported_name}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{report.reporter_name}</TableCell>
+                  <TableCell className="capitalize">{report.category?.replace(/_/g, ' ')}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {new Date(report.created_at).toLocaleDateString('id-ID')}
+                  </TableCell>
+                  <TableCell>{getStatusBadge(report.status)}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Link href={`/admin/reports/${report.id}`} className={buttonVariants({ variant: 'outline', size: 'sm', className: "h-8 px-2" })}>
+                      <Eye className="h-4 w-4 mr-1" /> View
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>

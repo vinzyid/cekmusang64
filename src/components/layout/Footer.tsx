@@ -23,7 +23,7 @@ export function Footer() {
             <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
               <li><Link href="/about" className="hover:text-primary transition-colors">About</Link></li>
               <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+              <li><a href="https://wa.me/6281288882671" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Contact (WhatsApp)</a></li>
             </ul>
           </div>
 
