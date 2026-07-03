@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CekMusang64.id
 
-## Getting Started
+Platform komunitas terpercaya untuk kolektor diecast di Indonesia. CekMusang64.id membantu para kolektor untuk memverifikasi riwayat transaksi dan menghindari penipuan dengan menyediakan database laporan transaksi bermasalah yang telah diverifikasi oleh admin.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Pencarian Cepat:** Cari rekam jejak penjual atau pembeli berdasarkan nama, nomor WhatsApp, nomor rekening, e-wallet, atau link profil Facebook.
+- **Lapor Transaksi Bermasalah:** Formulir multi-langkah yang mudah digunakan untuk melaporkan masalah transaksi lengkap dengan bukti.
+- **Sistem Verifikasi:** Setiap laporan yang masuk akan ditinjau oleh admin untuk memastikan validitas bukti sebelum dipublikasikan.
+- **Transparan & Aman:** Melindungi komunitas tanpa melabeli secara sepihak; hanya menampilkan fakta historis dari laporan pengguna.
+- **Admin Dashboard:** Panel khusus untuk admin mengelola laporan, pengguna, dan kategori.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Teknologi yang Digunakan
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Bahasa:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Form Validation:** React Hook Form & Zod
+- **Icons:** Lucide React
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Cara Menjalankan di Lokal (Development)
 
-## Learn More
+1. **Clone repository ini**
+   ```bash
+   git clone https://github.com/vinzyid/cekmusang64.git
+   cd cekmusang64
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Atur Environment Variables**
+   Buat file `.env.local` di folder *root* dan masukkan kredensial Supabase Anda:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Jalankan Server Lokal**
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 
-## Deploy on Vercel
+## Struktur Database (Supabase)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Skema database lengkap (termasuk Row Level Security/RLS dan Storage) tersedia di dalam direktori `supabase/migrations/`. Anda dapat langsung menjalankan file SQL tersebut di **SQL Editor** pada dashboard Supabase Anda.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Kontribusi
+
+Kami sangat menghargai kontribusi dari komunitas! Jika Anda menemukan *bug* atau memiliki ide fitur baru, silakan buat *issue* atau *pull request*.
+
+## Dukung Pengembang
+
+Platform ini dikembangkan secara mandiri untuk membantu ekosistem kolektor diecast. Jika Anda merasa terbantu, pertimbangkan untuk mendukung pengembang melalui:
+[Tako.id/vinzy.id](https://tako.id/vinzy.id)
+
+---
+*Dibangun dengan ❤️ untuk komunitas Diecast Indonesia.*
