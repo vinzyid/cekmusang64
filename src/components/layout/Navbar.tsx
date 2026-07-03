@@ -62,15 +62,6 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Link href="/auth/login" className={buttonVariants({ variant: 'ghost' })}>
-            Login
-          </Link>
-          <Link href="/auth/register" className={buttonVariants({ variant: 'default' })}>
-            Register
-          </Link>
-        </div>
-
         {/* Mobile Menu Toggle */}
         <button
           className="md:hidden text-foreground"
@@ -97,15 +88,6 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <hr className="my-2" />
-            <div className="flex flex-col gap-2">
-              <Link href="/auth/login" className={buttonVariants({ variant: 'outline', className: "w-full" })}>
-                Login
-              </Link>
-              <Link href="/auth/register" className={buttonVariants({ variant: 'default', className: "w-full" })}>
-                Register
-              </Link>
-            </div>
           </div>
         </div>
       )}

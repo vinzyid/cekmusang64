@@ -45,8 +45,9 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} CekMusang64.id. All rights reserved.
+        <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} CekMusang64.id. All rights reserved.</p>
+          <Link href="/auth/login" className="hover:text-primary transition-colors mt-4 md:mt-0">Admin Access</Link>
         </div>
       </div>
     </footer>

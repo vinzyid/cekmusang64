@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,16 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: latestReports } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  const reports = latestReports || [];
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -54,12 +64,11 @@ export default function Home() {
       {/* Statistics Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {[
               { label: 'Total Reports', value: '1,248', icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
               { label: 'Verified Reports', value: '856', icon: ShieldCheck, color: 'text-green-500', bg: 'bg-green-50' },
               { label: 'Pending Reviews', value: '42', icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50' },
-              { label: 'Community Members', value: '15.4k', icon: Users, color: 'text-purple-500', bg: 'bg-purple-50' },
             ].map((stat, i) => (
               <Card key={i} className="border-none shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgb(0,0,0,0.06)] transition-shadow">
                 <CardContent className="p-6 flex flex-col items-center text-center gap-4">
@@ -152,33 +161,44 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Dummy data for preview */}
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
-                <CardContent className="p-0">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        <ShieldCheck className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">12 Okt 2023</span>
-                    </div>
-                    <h3 className="font-heading font-semibold text-xl mb-1">Ahmad S. (Toko Maju)</h3>
-                    <p className="text-sm text-muted-foreground mb-4">Kategori: Barang Tidak Dikirim</p>
-                    
-                    <div className="flex items-center gap-2 mb-6">
-                      <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-md">Tokopedia</span>
-                      <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-md">Rp 1.500.000</span>
-                    </div>
+            {reports.length === 0 ? (
+              <div className="col-span-full text-center py-10">
+                <p className="text-muted-foreground">Belum ada laporan terbaru saat ini.</p>
+              </div>
+            ) : (
+              reports.map((report) => (
+                <Card key={report.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <CardContent className="p-0">
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(report.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <h3 className="font-heading font-semibold text-xl mb-1 truncate">{report.reported_name}</h3>
+                      <p className="text-sm text-muted-foreground mb-4 truncate text-capitalize">Kategori: {report.category?.replace(/_/g, ' ')}</p>
+                      
+                      <div className="flex items-center gap-2 mb-6">
+                        <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-md">{report.marketplace}</span>
+                        {report.transaction_amount && (
+                          <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-md">
+                            Rp {report.transaction_amount.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </div>
 
-                    <Link href={`/report/${i}`} className={buttonVariants({ variant: 'secondary', className: "w-full" })}>
-                      View Detail
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      <Link href={`/report/${report.id}`} className={buttonVariants({ variant: 'secondary', className: "w-full" })}>
+                        View Detail
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </section>

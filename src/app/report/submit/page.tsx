@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldAlert, UploadCloud, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, UploadCloud, CheckCircle2, X, FileImage, AlertCircle } from 'lucide-react';
+import { submitAnonymousReport } from '@/app/actions/report';
 import {
   Select,
   SelectContent,
@@ -39,6 +40,21 @@ export default function SubmitReportPage() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setEvidenceFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (indexToRemove: number) => {
+    setEvidenceFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
 
   const { register, handleSubmit, formState: { errors }, trigger, setValue } = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
@@ -60,11 +76,30 @@ export default function SubmitReportPage() {
 
   const onSubmit = async (data: ReportFormValues) => {
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    setSubmitError('');
+    
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, typeof value === 'boolean' ? String(value) : value as string);
+      });
+
+      evidenceFiles.forEach((file, index) => {
+        formData.append(`evidence_${index}`, file);
+      });
+
+      const result = await submitAnonymousReport(formData);
+      
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setSubmitError(result.error || 'Gagal mengirim laporan');
+      }
+    } catch (error) {
+      setSubmitError('Terjadi kesalahan yang tidak terduga');
+    } finally {
       setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1500);
+    }
   };
 
   if (isSuccess) {
@@ -235,12 +270,54 @@ export default function SubmitReportPage() {
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 <h2 className="text-xl font-heading font-semibold border-b pb-2 mb-4">Upload Bukti & Konfirmasi</h2>
                 
-                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer">
+                {submitError && (
+                  <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center gap-2 text-sm mb-4">
+                    <AlertCircle size={16} />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+                
+                <div 
+                  className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <UploadCloud className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-medium mb-1">Upload Bukti Transaksi</h3>
                   <p className="text-xs text-muted-foreground mb-4">Screenshot chat, bukti transfer, foto postingan, atau screenshot profil pelaku (Max 5MB)</p>
-                  <Button variant="secondary" size="sm" type="button">Pilih File</Button>
+                  <Button variant="secondary" size="sm" type="button" onClick={() => fileInputRef.current?.click()}>Pilih File</Button>
                 </div>
+                
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  multiple 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+
+                {evidenceFiles.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <p className="text-sm font-medium">File Terpilih ({evidenceFiles.length}):</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {evidenceFiles.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-secondary/50 rounded-lg text-sm border border-border">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <FileImage className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{file.name}</span>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                            className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg flex items-start gap-3">
                   <ShieldAlert className="text-orange-500 shrink-0 mt-0.5" size={20} />
